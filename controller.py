@@ -118,8 +118,6 @@ class Test(Scene):
 class TestZIndex(Scene):
 
     def construct(self):
-        snes = SVGMobject(ASSETS_PATH + "xbox-one.svg")
-        ps4 = SVGMobject(ASSETS_PATH + "ps2.svg")
-        self.play(ShowCreation(snes))
-        self.play(Transform(snes, ps4))
+        ps4 = SVGMobject(ASSETS_PATH + "gamecube.svg").scale(4)
+        self.play(ShowCreation(ps4))
         self.wait()
