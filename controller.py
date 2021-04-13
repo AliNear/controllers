@@ -3,10 +3,17 @@ import os
 ASSETS_PATH = os.getcwd() + "/assets/"
 
 
+def easeInOutCubic(x):
+    from math import pow
+    if x < .5:
+        return 4 * x * x * x
+    else:
+        return 1 - pow(-2 * x + 2, 3) / 2
 
 def get_obj_by_id(obj, id):
     for i in obj.submobjects:
         if i.id == id:
+            print("found", i)
             return i
     return None
 
@@ -51,96 +58,6 @@ def get_objs_by_ids(obj, ids):
     return objs
 
 
-class Test(Scene):
-    """
-    This scene is for testing svg files and some transition
-    """
-
-    def construct(self):
-        xbox = SVGMobject(ASSETS_PATH + "xbox_360.svg")
-        xbox_fat = SVGMobject(ASSETS_PATH + "xbox_fat.svg")
-        ps2 = SVGMobject(ASSETS_PATH + "ps2.svg")
-        switch = SVGMobject(ASSETS_PATH + "switch.svg")
-        switch_pro = SVGMobject(ASSETS_PATH + "switch_pro.svg").scale(1.0)
-        square_button_ = get_obj_by_id(ps2, "square_button")
-        square_button_.set_stroke("#FF01DB", 3)
-        self.play(DrawBorderThenFill(switch))
-        """
-        a_button = get_obj_by_id(xbox, "a_button")
-        b_button = get_obj_by_id(xbox, "b_button")
-        x_button = get_obj_by_id(xbox, "x_button")
-        y_button = get_obj_by_id(xbox, "y_button")
-        x_button_ = get_obj_by_id(ps2, "x_button")
-        triangle_button_ = get_obj_by_id(ps2, "triangle_button")
-        circle_button_ = get_obj_by_id(ps2, "circle_button")
-        square_button_ = get_obj_by_id(ps2, "square_button")
-        square_button_.set_stroke("#FF01DB", 3)
-        transforms = [
-            (a_button, x_button_),
-            (b_button, circle_button_),
-            (x_button, square_button_),
-            (y_button, triangle_button_)
-        ]
-        for i,j in transforms: print(i, j)
-        self.play(ShowCreation(xbox))
-        self.wait(.4)
-        self.play(
-            LaggedStart(*[
-                ReplacementTransform(i, j)
-                for i, j in transforms
-            ]
-            )
-        )
-        xbox_ids = ["a_button", "b_button", "x_button", "y_button", "right_analog", "left_analog"]
-        ps2_ids = ["x_button", "circle_button", "square_button", "triangle_button", "right_analog", "left_analog"]
-        xbox_obj, xbox_rest = get_objs_by_ids_rest(xbox, xbox_ids)
-        ps2_obj, ps2_rest = get_objs_by_ids_rest(ps2, ps2_ids)
-        self.play(
-            *[
-                ApplyMethod(i.shift, 2 * UP)
-                for i in xbox_obj
-            ]
-        )
-        self.play(ReplacementTransform(xbox_rest, ps2_rest))
-        self.play(
-            LaggedStart(*[
-                ReplacementTransform(i, j)
-                for i,j in zip(xbox_obj, ps2_obj)
-            ]),
-            #ReplacementTransform(xbox_rest, ps2_rest)
-        )
-        """
-        left_con, *t = get_objs_by_ids_rest(switch, ["left_trigger", "left_con", "left_analog"])
-        screen, t = get_objs_by_ids_rest(switch, ["screen", "screen_border", "bezels", "lower_bezel"])
-        right_con = get_obj_by_id(switch, "right_con")
-        left_con = VGroup(*left_con)
-        print(len(screen))
-        screen = VGroup(*screen)
-        for i in left_con:
-            i.z_index = 2
-        right_con.z_index = 2
-        self.play(
-            ApplyMethod(left_con.shift, UP),
-            ApplyMethod(right_con.shift, UP),
-        )
-        self.play(Transform(screen, switch_pro))
-        self.play(
-            ApplyMethod(left_con.move_to, ORIGIN + .7 * LEFT),
-            ApplyMethod(right_con.move_to, ORIGIN + .7 * RIGHT),
-        )
-        #self.play()
-        #self.play(ReplacementTransform(xbox, ps2))
-        # self.play(ReplacementTransform(ps2, nes))
-        self.wait()
-
-class TestZIndex(Scene):
-
-    def construct(self):
-        ps4 = SVGMobject(ASSETS_PATH + "n64.svg").scale(2)
-        self.play(ShowCreation(ps4))
-        self.wait()
-
-
 class ControllerEvolution(MovingCameraScene):
 
     def construct(self):
@@ -152,6 +69,8 @@ class ControllerEvolution(MovingCameraScene):
         self.xbox_gamecube()
         self.gamecube_wii()
         self.wii_xbox360()
+        self.xbox360_ps3()
+        self.ps3_ps4()
 
     def nes_snes(self):
         self.nes = SVGMobject(ASSETS_PATH + "nes.svg")
@@ -300,7 +219,7 @@ class ControllerEvolution(MovingCameraScene):
 
     def n64_ps2(self):
         self.ps2 = SVGMobject(ASSETS_PATH + "ps2").scale(.8)
-        for i in self.ps2:i.set_stroke(width=.5)
+        for i in self.ps2:i.set_stroke(width=.1)
         handles = ["left_handle", "right_handle"]
         ps2_handles = get_objs_by_ids(self.ps2, handles)
         n64_handles = get_objs_by_ids(self.n64, handles)
@@ -320,7 +239,11 @@ class ControllerEvolution(MovingCameraScene):
             handles+self.ps2_buttons+self.ps2_buttons_shapes+
             self.ps2_ssa+self.ps1_triggers+self.ps1_dpad
         )
-        for i in self.ps2_body: i.z_index=-1
+        for i in self.ps2_body:
+            if i.id != "body":
+                i.z_index = -1
+            else:
+                i.z_index = -3
 
         temp, self.n64_body = get_objs_by_ids_rest(
             self.n64,
@@ -328,6 +251,8 @@ class ControllerEvolution(MovingCameraScene):
         )
 
         for i in self.n64_body: i.z_index=-1
+        for i in n64_handles: i.z_index = -2
+        for i in ps2_handles: i.z_index = -2
 
 
 
@@ -504,8 +429,253 @@ class ControllerEvolution(MovingCameraScene):
         self.wait(.3)
 
     def wii_xbox360(self):
-        self.xbox360 = SVGMobject(ASSETS_PATH + "xbox_360.svg")
+        self.xbox360 = SVGMobject(ASSETS_PATH + "xbox360.svg")
+        for i in self.xbox360.submobjects: i.set_stroke(color=BLACK, width=.1)
         self.play(
             FadeTransformPieces(self.wii, self.xbox360)
         )
+        self.wait(.3)
 
+    def xbox360_ps3(self):
+        self.ps3 = SVGMobject(ASSETS_PATH + "ps3.svg")
+        for i in self.xbox360.submobjects: i.set_stroke(color=BLACK, width=.1)
+        for i in self.ps3.submobjects: i.set_stroke(color=BLACK, width=.1)
+
+        #directions for the animation
+        directions = [UP, UP, UP+.2*RIGHT, RIGHT, DOWN, UL, UR, UL, DL]
+
+        #objects to retreive from the xbox controller
+        triggers = get_objs_by_ids(self.xbox360, self.ps1_triggers)
+        buttons = [[f"{i}_button", i] for i in "ybax"]
+        buttons_obj = []
+        for i in buttons:
+            button = get_objs_by_ids(self.xbox360, i)
+            buttons_obj.append(button)
+        start_back = [[f"{i}_rect", i] for i in ["start", "back"]]
+        start_back_obj = []
+        for i in start_back:
+            s = get_objs_by_ids(self.xbox360, i)
+            start_back_obj.append(s)
+
+        dpad =  ["dpad", "dpad_inner"]
+        dpad_obj = get_objs_by_ids(self.xbox360, dpad)
+
+        xbox_objs = [*triggers, *buttons_obj, *start_back_obj, dpad_obj]
+
+        sb = [*start_back[0], *start_back[1]] #flattened version of start_back
+        rest, xbox_body = get_objs_by_ids_rest(
+            self.xbox360,
+            self.ps1_triggers+buttons+sb+dpad
+        )
+
+        #ps3 objects
+        buttons_ps3 = [[f"{i}_button", i] for i in ["triangle", "circle", "cross", "square"]]
+        buttons_ps3_obj = []
+        for i in buttons_ps3:
+            button = get_objs_by_ids(self.ps3, i)
+            buttons_ps3_obj.append(button)
+
+        triggers_ps3 = get_objs_by_ids(self.ps3, self.ps1_triggers)
+        ss_ps3 = ["start", "select"]
+        ss_ps3_obj = [*get_objs_by_ids(self.ps3, ss_ps3)]
+        dpad_ps3 = ["up", "right", "down", "left"]
+        dpad_ps3_obj = get_objs_by_ids(self.ps3, dpad_ps3)
+
+        ps3_objs = [*triggers_ps3, *buttons_ps3_obj, *ss_ps3_obj, dpad_ps3_obj]
+        #flatten the buttons_ps3
+        bps3 = []
+        for i in buttons_ps3:
+            bps3.append(i[0])
+            bps3.append(i[1])
+
+        rest, ps3_body = get_objs_by_ids_rest(
+            self.ps3,
+            self.ps1_triggers+bps3+ss_ps3+dpad_ps3
+        )
+        for i in triggers_ps3: i.z_index = -2
+        for i in triggers: i.z_index = -2
+        for i in ps3_body: i.z_index = 0
+
+
+
+
+
+
+        def updater_handles(direction):
+            def updater(obj, dt):
+                value = dt
+                speed = 4
+                rot_speed = 3
+                obj.shift(value * speed * direction)
+                obj.rotate(value * rot_speed * PI)
+            return updater
+
+        for index, obj in enumerate(xbox_objs):
+            obj.clear_updaters()
+            obj.add_updater(updater_handles(directions[index]))
+
+        self.play(
+            *[
+                i.animate.update()
+                for i in xbox_objs
+            ]
+        )
+        for i in xbox_objs: i.clear_updaters()
+        self.play(
+            FadeTransformPieces(xbox_body, ps3_body)
+        )
+        self.play(
+            LaggedStart(*[
+                Transform(i, j)
+                for i,j in zip(xbox_objs, ps3_objs)
+            ]),
+            rate_func=rush_into
+        )
+        self.pss = ps3_objs
+
+        self.wait(.3)
+
+    def ps3_ps4(self):
+        self.ps3_2 = SVGMobject(ASSETS_PATH + "ps3.svg")
+        for i in self.ps3_2.submobjects: i.set_stroke(color=BLACK, width=.1)
+        self.ps4 = SVGMobject(ASSETS_PATH + "ps4.svg")
+        t1 = 1
+        self.current = 0
+        self.direction = DOWN
+
+        def updater(obj, dt):
+            self.current += dt
+
+            if self.current >= t1:
+                self.direction = UP
+                self.current = 0
+            alpha = easeInOutCubic(self.current) * .2
+            obj.shift(alpha * self.direction)
+
+        self.ps3_2.add_updater(updater)
+        self.add(self.ps3_2)
+        self.remove(self.ps3, *self.pss, self.xbox360)
+        self.wait(1.3)
+        self.play(
+            FadeTransformPieces(self.ps3_2, self.ps4)
+        )
+
+
+class Test(Scene):
+
+    def construct(self):
+        #diff between buttons coors (ps4 & ps3)
+        self.x_bias = 0.11373310005032339
+        self.y_bias = 0.23616817231530646
+        self.ps3 = SVGMobject(ASSETS_PATH + "ps3.svg")
+        self.ps4 = SVGMobject(ASSETS_PATH + "ps4.svg")
+        for i in self.ps3.submobjects: i.set_stroke(color=BLACK, width=.1)
+
+        body_ps4 = get_obj_by_id(self.ps4, "body")
+        #body_ps4.z_index = -1
+        body_ps3 = get_objs_by_ids(
+            self.ps3,
+            [
+                "body_center", "body_center_inner", "dpad_holder",
+                "right_trigger_holder", "left_trigger_holder",
+                "right_handle", "left_handle", "buttons_holder",
+                "dpad_cross", "buttons_cross"
+            ]
+        )
+        #for i in body_ps3: i.z_index = -1
+
+        self.ps4.set_y(-self.y_bias)
+        self.ps4.set_x(-self.x_bias)
+
+        #self.play(FadeIn(self.ps4))
+        self.ps3.animate.match_width(self.ps4)
+        #self.ps3.scale(4)
+        #self.ps4.scale(4)
+        self.play(FadeIn(self.ps3))
+        animations = []
+        transforms = []
+        for i in ("cross", "triangle", "square", "circle"):
+            #button: the cirle
+            #shape: cross, triangle, etc...
+            button_ps3 = get_obj_by_id(self.ps3, f"{i}_button")
+            button_ps4 = get_obj_by_id(self.ps4, f"{i}_button")
+            shape_ps3 = get_obj_by_id(self.ps3, i)
+            shape_ps4 = get_obj_by_id(self.ps4, i)
+            shape_ps3.z_index = 3
+            shape_ps4.z_index = 3
+            button_ps4.z_index = 2
+            button_ps3.z_index = 2
+
+            animations.append(button_ps3.animate.match_style(button_ps4))
+            animations.append(button_ps3.animate.move_to(button_ps4))
+            transforms.append(Transform(shape_ps3, shape_ps4))
+
+        buttons_cross = get_obj_by_id(self.ps3, "buttons_cross")
+        dpad_cross = get_obj_by_id(self.ps3, "dpad_cross")
+        dpad = get_obj_by_id(self.ps4, "arrows")
+        dpad_ps3 = get_objs_by_ids(self.ps3, ["up", "down", "left", "right"])
+        print(dpad.get_x()-dpad_cross.get_x())
+        holders_ps3 = get_objs_by_ids(self.ps3, ["buttons_holder", "dpad_holder"])
+        holders_ps4 = get_objs_by_ids(self.ps4, ["left_circle", "right_circle"])
+        self.play(
+            ShrinkToCenter(buttons_cross),
+            ShrinkToCenter(dpad_cross),
+        )
+        self.play(*[
+            i.animate.match_style(j)
+            for i,j in zip(holders_ps3, holders_ps4)
+        ])
+        self.play(
+            LaggedStart(*animations),
+            LaggedStart(*transforms),
+            rate_fun=rush_into
+        )
+        self.play(FadeTransformPieces(dpad_ps3, dpad))
+
+
+
+
+    def show_diff(self):
+        x_sum = 0
+        y_sum = 0
+        for i in ("cross", "triangle", "square", "circle"):
+            cross_ps3 = get_obj_by_id(self.ps3, f"{i}_button")
+            cross_ps4 = get_obj_by_id(self.ps4, f"{i}_button")
+
+            x_diff = cross_ps4.get_x()-cross_ps3.get_x()
+            y_diff = cross_ps4.get_y()-cross_ps3.get_y()
+            x_sum += x_diff
+            y_sum += y_diff
+            #print("Y Diff", y_diff)
+            #print("X Diff", x_diff)
+
+        print("Average x diff", x_sum/4)
+        print("Average y diff", y_sum/4)
+
+        self.wait(.3)
+
+
+class Clipping(Scene):
+
+    def construct(self):
+        for i in range(100):
+            x = (np.random.rand() -.5) * 14
+            y = (np.random.rand() - .5) * 7.6
+            scale = np.random.rand() * .7
+            obj = Dot(color=WHITE).scale(scale)
+            obj.set_x(x)
+            obj.set_y(y)
+            self.add(obj)
+
+        c = Circle(fill_opacity=1, fill_color=BLACK)
+        c.z_index = -1
+        self.play(c.animate.shift(3 * RIGHT))
+        self.wait()
+
+class Space(Scene):
+
+    def construct(self):
+        f = SVGMobject(ASSETS_PATH + "result.svg").scale(4)
+        self.play(
+            ShowCreation(f)
+        )
