@@ -1,3 +1,9 @@
+# Author Grib ALI
+# From nes to ps3, all in one class
+# Not a good design decision
+# From ps4, every transition on it's own scene.
+
+
 from manim import *
 import os
 ASSETS_PATH = os.getcwd() + "/assets/"
@@ -21,7 +27,7 @@ def get_objs_by_ids_rest(obj, ids):
     """
     This function gets all objects by id in ids
     and the rest as a VGroup
-    Returns tuple(objs_by_ids, VGroup)
+    Returns tuple(objs_by_ids, VGroup rest)
     """
     objs = VGroup()
     rest = VGroup()
@@ -653,6 +659,205 @@ class Test(Scene):
         print("Average y diff", y_sum/4)
 
         self.wait(.3)
+
+
+class ControllerPS3ToPS4(Scene):
+    # TODO:
+    # Fix coords for flight lines
+
+    def construct(self):
+        self.ps3 = SVGMobject(ASSETS_PATH + "ps3.svg")
+        for i in self.ps3.submobjects:
+            i.set_stroke(width=.5)
+        self.ps4 = SVGMobject(ASSETS_PATH + "ps4_2.svg")
+        self.add(self.ps3)
+        l = Line(
+            UP,
+            DOWN,
+            color=BLACK,
+            stroke_width=.8,
+        )
+        l.z_index = -9
+        arrays = [
+            np.array([x, y, 0])
+            for x, y in ((-2, 1), (-1.5, -.5), (1.7, 1),(3, .5),(1,1))
+        ]
+        lines = VGroup(*[
+            l.copy().shift(i)
+            for i in arrays
+        ])
+        for i in lines:
+            i.z_index = -9
+
+
+        """getting the buttons"""
+        buttons_ps3 = VGroup()
+        shapes_ps3 = VGroup()
+        buttons_ps4 = VGroup()
+        shapes_ps4 = VGroup()
+        for i in ("cross", "triangle", "square", "circle"):
+            # button: the circle
+            # shape: cross, triangle, etc...
+            button_ps3 = get_obj_by_id(self.ps3, f"{i}_button")
+            button_ps4 = get_obj_by_id(self.ps4, f"{i}_button")
+            shape_ps3 = get_obj_by_id(self.ps3, i)
+            shape_ps4 = get_obj_by_id(self.ps4, i)
+
+            shape_ps3.z_index = 3
+            shape_ps4.z_index = 3
+            button_ps4.z_index = 2
+            button_ps3.z_index = 2
+
+            buttons_ps3.add(button_ps3)
+            buttons_ps4.add(button_ps4)
+            shapes_ps3.add(shape_ps3)
+            shapes_ps4.add(shape_ps4)
+        dpad_ps3 = get_objs_by_ids(self.ps3, ["up", "down", "left", "right"])
+        analogs = ["_analog_base", "_analog", "_analog_inner"]
+        left_analog = ["left"+i for i in analogs]
+        right_analog = ["right"+i for i in analogs]
+
+
+        analogs_ps3 = get_objs_by_ids(self.ps3,
+                                      left_analog+right_analog)
+        analogs_ps4 = get_objs_by_ids(self.ps4,
+                                      left_analog+right_analog)
+        # Bodies
+        left_handle = get_obj_by_id(self.ps3, "left_handle")
+        right_handle = get_obj_by_id(self.ps3, "right_handle")
+        left_handle_4 = get_obj_by_id(self.ps4, "left_handle")
+        right_handle_4 = get_obj_by_id(self.ps4, "right_handle")
+
+        body_ps4 = get_obj_by_id(self.ps4, "body_center")
+        body_ps3 = get_objs_by_ids(self.ps3, [
+            "body_center",
+            "body_center_inner",
+        ])
+        ss = get_objs_by_ids(self.ps3, [
+            "start",
+            "select"
+        ])
+        sm = get_objs_by_ids(self.ps4, [
+            "share",
+            "menu"
+        ])
+
+        ss_text = get_objs_by_ids(self.ps3, [
+            "start_txt",
+            "select_txt"
+        ])
+
+        dpad_ps4 = get_obj_by_id(self.ps4, "arrows")
+        logo = ["ps_logo_bg", "ps_logo"]
+        logo_ps3 = get_objs_by_ids(self.ps3, logo)
+        logo_ps3.z_index = 4
+        logo_ps4 = get_objs_by_ids(self.ps4, logo)
+        lights = [f"light_{i}" for i in range(1, 5)]
+        lights_ps3 = get_objs_by_ids(self.ps3, lights)
+        trackpad = get_obj_by_id(self.ps4, "trackpad")
+        trackpad.z_index = 4
+        mic = get_obj_by_id(self.ps4, "mic")
+        mic.z_index = 4
+        right_extreme = get_obj_by_id(self.ps4, "right_extreme")
+        left_extreme = get_obj_by_id(self.ps4, "left_extreme")
+        right_extreme.z_index = 4
+        left_extreme.z_index = 4
+
+        buttons_flight = AnimationGroup(
+            LaggedStart(*[
+                ShowPassingFlash(i, time_width=.3, rate_func=linear)
+                for i in lines
+            ],
+            lag_ratio=.4
+            ),
+            # WiggleOutThenIn(img, rotation_angle=0.01*.5*TAU,scale_value=1, n_wiggles=20, rate_func=linear)
+            buttons_ps3.animate.shift(1.5*UP),
+            shapes_ps3.animate.shift(1.5*UP),
+            dpad_ps3.animate.shift(1.5*UP),
+            analogs_ps3.animate.shift(1.5*UP),
+            ss.animate.shift(1.5*UP),
+            logo_ps3.animate.shift(1.5*UP),
+            rate_func=linear,
+            run_time=1
+        )
+
+
+        text_lights_fading = AnimationGroup(
+            LaggedStart(*[
+                ShrinkToCenter(i)
+                for i in [*lights_ps3, *ss_text]
+            ]),
+            rate_func=linear,
+        )
+
+        self.play(
+            LaggedStart(
+                buttons_flight,
+                text_lights_fading,
+                lag_ratio=.5
+            )
+        )
+
+        transforms_body = AnimationGroup(
+            FadeTransform(left_handle, left_handle_4),
+            FadeTransform(right_handle, right_handle_4),
+            FadeTransform(body_ps3, body_ps4),
+            rate_func=linear,
+            run_time=.7
+ 
+        )
+        transforms_buttons = AnimationGroup(
+            LaggedStart(
+                LaggedStart(*[
+                    Transform(i, j)
+                    for i, j in zip(buttons_ps3, buttons_ps4)
+                ]),
+                LaggedStart(*[
+                    Transform(i, j)
+                    for i, j in zip(shapes_ps3, shapes_ps4)
+                ]),
+                lag_ratio=1
+            ),
+            FadeTransformPieces(dpad_ps3, dpad_ps4),
+            FadeTransform(ss[0], sm[1]),
+            FadeTransform(ss[1], sm[0]),
+            FadeTransform(analogs_ps3, analogs_ps4),
+            logo_ps3.animate.move_to(logo_ps4)
+        )
+        self.play(
+            LaggedStart(
+                transforms_body,
+                transforms_buttons,
+                lag_ratio=.5
+            )
+        )
+        for i in lines:
+            i.rotate(180 * DEGREES)
+
+        trackpad.shift(5*UP)
+        # right and left coefficient
+        rl_coeff = 1
+        # down coefficient
+        d_coeff = 4
+
+        self.play(
+            LaggedStart(
+                GrowFromCenter(mic),
+                FadeInFrom(right_extreme, rl_coeff * RIGHT + d_coeff * DOWN),
+                FadeInFrom(left_extreme, rl_coeff * LEFT + d_coeff * DOWN),
+            )
+        )
+        self.play(
+            LaggedStart(*[
+                ShowPassingFlash(i, time_width=.3, rate_func=linear)
+                for i in lines
+            ],
+            lag_ratio=.3
+            ),
+            trackpad.animate.shift(5*DOWN),
+            rate_func=linear
+        )
+
 
 
 class Clipping(Scene):
