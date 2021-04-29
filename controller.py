@@ -7,7 +7,7 @@
 from manim import *
 import os
 ASSETS_PATH = os.getcwd() + "/assets/"
-
+from manim.utils.rate_functions import ease_in_expo
 
 def easeInOutCubic(x):
     from math import pow
