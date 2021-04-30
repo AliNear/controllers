@@ -678,9 +678,14 @@ class ControllerPS3ToPS4(Scene):
             stroke_width=.8,
         )
         l.z_index = -9
+        lines_coors = [
+            (-2, 1), (-1.5, 3.5),
+            (2.7, 1),(3, .5),
+            (1,4), (-2, -1) 
+        ]
         arrays = [
             np.array([x, y, 0])
-            for x, y in ((-2, 1), (-1.5, -.5), (1.7, 1),(3, .5),(1,1))
+            for x, y in lines_coors
         ]
         lines = VGroup(*[
             l.copy().shift(i)

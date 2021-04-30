@@ -1,7 +1,7 @@
 from math import sqrt, pow, sin, pi
 
 
-def ease_in_out_cubic(x):
+def ease_in_out_cubic(x: float) -> float:
     from math import pow
     if x < .5:
         return 4 * x * x * x
@@ -9,7 +9,7 @@ def ease_in_out_cubic(x):
         return 1 - pow(-2 * x + 2, 3) / 2
 
 
-def ease_in_out_elastic(x):
+def ease_in_out_elastic(x: float) -> float:
     c5 = (2 * pi) / 4.5
     if x == 0 or x == 1:
         return x
@@ -20,7 +20,7 @@ def ease_in_out_elastic(x):
         return (pow(2, -20 * x + 10) * sin((20 * x - 11.125) * c5)) / 2 + 1
 
 
-def ease_in_out_back(x):
+def ease_in_out_back(x: float) -> float:
     c1 = 1.70158
     c2 = c1 * 1.525
 
@@ -30,7 +30,7 @@ def ease_in_out_back(x):
         return (pow(2 * x - 2, 2) * ((c2 + 1) * (x * 2 - 2) + c2) + 2) / 2
 
 
-def ease_in_elastic(x):
+def ease_in_elastic(x: float) -> float:
     c4 = (2 * pi) / 3
     if x == 0 or x == 1:
         return x
@@ -38,7 +38,7 @@ def ease_in_elastic(x):
         return -pow(2, 10 * x - 10) * sin((x * 10 - 10.75) * c4)
 
 
-def ease_out_elastic(x):
+def ease_out_elastic(x: float) -> float:
     c4 = (2 * pi) / 3
     if x == 0 or x == 1:
         return x
@@ -46,7 +46,7 @@ def ease_out_elastic(x):
         return pow(2, -10 * x) * sin((x * 10 - 0.75) * c4) + 1
 
 
-def ease_out_bounce(x):
+def ease_out_bounce(x: float) -> float:
     n1 = 7.5625
     d1 = 2.75
 
@@ -63,9 +63,9 @@ def ease_out_bounce(x):
         return n1 * t * x + 0.984375
 
 
-def ease_out_circ(x):
+def ease_out_circ(x: float) -> float:
     return sqrt(1 - pow(x - 1, 2))
 
 
-def ease_in_circ(x):
+def ease_in_circ(x: float) -> float:
     return 1 - sqrt(1 - pow(x, 2))
