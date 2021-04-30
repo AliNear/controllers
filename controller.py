@@ -864,28 +864,17 @@ class ControllerPS3ToPS4(Scene):
         )
 
 
-
-class Clipping(Scene):
-
+class ControllerPS4ToXboxOne(Scene):
+    """
+    Transition PS4 -> Xbox One
+    """
+    
     def construct(self):
-        for i in range(100):
-            x = (np.random.rand() -.5) * 14
-            y = (np.random.rand() - .5) * 7.6
-            scale = np.random.rand() * .7
-            obj = Dot(color=WHITE).scale(scale)
-            obj.set_x(x)
-            obj.set_y(y)
-            self.add(obj)
+        self.prepare()
+        self.start_animation()
 
-        c = Circle(fill_opacity=1, fill_color=BLACK)
-        c.z_index = -1
-        self.play(c.animate.shift(3 * RIGHT))
-        self.wait()
+    def prepare(self):
+        pass
 
-class Space(Scene):
-
-    def construct(self):
-        f = SVGMobject(ASSETS_PATH + "result.svg").scale(4)
-        self.play(
-            ShowCreation(f)
-        )
+    def start_animation(self):
+        pass
