@@ -6,8 +6,11 @@
 
 from manim import *
 import os
+
+from manim.utils.rate_functions import ease_in_circ, ease_in_expo
+
 ASSETS_PATH = os.getcwd() + "/assets/"
-from manim.utils.rate_functions import ease_in_expo
+
 
 def easeInOutCubic(x):
     from math import pow
@@ -16,10 +19,10 @@ def easeInOutCubic(x):
     else:
         return 1 - pow(-2 * x + 2, 3) / 2
 
-def get_obj_by_id(obj, id):
+def get_obj_by_id(obj: VMobject, index: str) -> VMobject:
     for i in obj.submobjects:
-        if i.id == id:
-            print("found", i)
+        if i.id == index:
+            print("found", i.id)
             return i
     return None
 
@@ -36,7 +39,6 @@ def get_objs_by_ids_rest(obj, ids):
             rest.add(i)
 
     for i in ids:
-        found = False
         for subm in obj.submobjects:
             if subm.id == i:
                 print("found", i)
@@ -54,7 +56,6 @@ def get_objs_by_ids(obj, ids):
     """
     objs = VGroup()
     for i in ids:
-        found = False
         for subm in obj.submobjects:
             if subm.id == i:
                 print("found", i)
@@ -101,8 +102,8 @@ class ControllerEvolution(MovingCameraScene):
         self.play(
             DrawBorderThenFill(self.nes)
         )
-
-        for i in body_nes: i.z_index=-1
+        for i in body_nes:
+            i.z_index =- 1
         self.wait(.2)
         self.play(
             ReplacementTransform(
@@ -187,7 +188,6 @@ class ControllerEvolution(MovingCameraScene):
         self.rgb = ["red", "green", "blue"]
         self.rgb = [i + "_button" for i in self.rgb]
         self.n64_dpad = get_obj_by_id(self.n64, "dpad")
-        triggers = self.ps1_triggers
         self.rgb_obj = get_objs_by_ids(self.n64, self.rgb)
         print(10 * "*", len(self.rgb_obj))
         self.red, self.green, self.blue = self.rgb_obj
@@ -316,13 +316,15 @@ class ControllerEvolution(MovingCameraScene):
             self.ps2_buttons+self.ps2_buttons_shapes+
             self.analogs+self.ps1_dpad
         )
-        for i in self.ps2_body: i.z_index=-1
+        for i in self.ps2_body:
+            i.z_index = -1
 
         rest, self.xbox_body = get_objs_by_ids_rest(
             self.xbox,
             self.xbox_button+self.analogs+self.xbox_letters+self.ps1_dpad
         )
-        for i in self.xbox_body: i.z_index=-1
+        for i in self.xbox_body:
+            i.z_index = -1
 
         self.play(
             ApplyMethod(self.ps2_buttons_obj.shift, 2 * UP, rate_func=rush_from),
@@ -398,9 +400,6 @@ class ControllerEvolution(MovingCameraScene):
                                self.ps1_triggers+["right_trigger_thing", "body", "middle_button"])
 
         wii_body, buttons = get_objs_by_ids_rest(self.wii, ["body"])
-
-
-        alpha = ValueTracker(0)
 
         def updater_handles(obj, dt):
             h1, h2 = obj
@@ -663,7 +662,7 @@ class Test(Scene):
 
 class ControllerPS3ToPS4(Scene):
     # TODO:
-    # Fix coords for flight lines
+    # Add Triggers
 
     def construct(self):
         self.ps3 = SVGMobject(ASSETS_PATH + "ps3.svg")
@@ -874,7 +873,99 @@ class ControllerPS4ToXboxOne(Scene):
         self.start_animation()
 
     def prepare(self):
-        pass
+        self.ps4 = SVGMobject(ASSETS_PATH + "ps4_2.svg")
+        self.xbox1 = SVGMobject(ASSETS_PATH + "xbox_one.svg")
+        self.ps4_body, self.ps4_rest = get_objs_by_ids_rest(
+            self.ps4,[
+                "body_center",
+                "left_handle",
+                "right_handle",
+                "right_trigger",
+                "left_trigger",
+                "trackpad",
+                "left_analog_base",
+                "right_analog_base"
+            ]
+        )
+
+        self.ps4_color = "#222629"
+
+        # Xbox One defs
+        self.xbox1_body = get_obj_by_id(self.xbox1, "body")
+        self.xbox1_upper = get_obj_by_id(self.xbox1, "upper_side")
+        self.xbox1_logo = get_obj_by_id(self.xbox1, "logo")
+        self.xbox1_triggers = get_obj_by_id(self.xbox1, "triggers")
+        self.xbox1_buttons = VGroup()
+        self.xbox1_letters = VGroup()
+        for i in list("xyba"):
+            button = get_obj_by_id(self.xbox1, f"{i}_button")
+            letter = get_obj_by_id(self.xbox1, i)
+            self.xbox1_buttons.add(button)
+            self.xbox1_letters.add(letter)
+
+        self.xbox1_view = get_objs_by_ids(self.xbox1, ["view", "view_icon"])
+        self.xbox1_menu = get_objs_by_ids(self.xbox1, ["menu", "menu_icon"])
+        self.xbox1_dpad = get_objs_by_ids(self.xbox1, ["dpad", "dpad_holder"])
+        analog = ["analog_base", "analog_outter", "analog", "analog_inner"]
+        left_analogs = ["left_"+i for i in analog]
+        right_analogs = ["right_"+i for i in analog]
+        self.xbox1_left_analog = get_objs_by_ids(self.xbox1, left_analogs)
+        self.xbox1_right_analog = get_objs_by_ids(self.xbox1, right_analogs)
 
     def start_animation(self):
-        pass
+        self.add(self.ps4)
+        self.play(
+            self.ps4.animate.set_color(self.ps4_color),
+            run_time=.5
+        )
+        self.remove(*self.ps4_rest)
+        self.wait(.1)
+        self.play(
+            ClockwiseTransform(self.ps4_body, self.xbox1_body),
+            rate_func=ease_in_circ,
+            run_time=.7
+        )
+        self.play(
+            LaggedStart(
+                DrawBorderThenFill(self.xbox1_upper), #run_time=.8),
+                FadeInFrom(self.xbox1_triggers, UP),
+                GrowFromCenter(self.xbox1_logo),
+                lag_ratio=.25
+            )
+        )
+        self.play(
+            LaggedStart(
+                LaggedStart(*[
+                    GrowFromCenter(i)
+                    for i in self.xbox1_buttons
+                ]),
+                LaggedStart(*[
+                    DrawBorderThenFill(i, run_time=.7)
+                    for i in self.xbox1_letters
+                ]),
+                LaggedStart(
+                    GrowFromCenter(self.xbox1_menu[0]),
+                    FadeIn(self.xbox1_menu[1]),
+                    GrowFromCenter(self.xbox1_view[0]),
+                    FadeIn(self.xbox1_view[1]),
+                    lag_ratio=.2
+                ),
+                LaggedStart(
+                    LaggedStart(*[
+                        GrowFromCenter(i)
+                        for i in self.xbox1_right_analog
+                    ]),
+                    LaggedStart(*[
+                        GrowFromCenter(i)
+                        for i in self.xbox1_left_analog
+                    ]),
+                    LaggedStart(
+                        GrowFromCenter(self.xbox1_dpad[1]),
+                        DrawBorderThenFill(self.xbox1_dpad[0], run_time=.6),
+                    ),
+                    lag_ratio=.4
+                ), 
+                lag_ratio=.4
+            )
+        )
+        self.wait(.1)
