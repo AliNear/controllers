@@ -4,6 +4,7 @@
 # From ps4, every transition on it's own scene.
 
 
+from typing_extensions import runtime
 from manim import *
 import os
 
@@ -77,7 +78,6 @@ class ControllerEvolution(MovingCameraScene):
         self.gamecube_wii()
         self.wii_xbox360()
         self.xbox360_ps3()
-        self.ps3_ps4()
 
     def nes_snes(self):
         self.nes = SVGMobject(ASSETS_PATH + "nes.svg")
@@ -540,31 +540,6 @@ class ControllerEvolution(MovingCameraScene):
 
         self.wait(.3)
 
-    def ps3_ps4(self):
-        self.ps3_2 = SVGMobject(ASSETS_PATH + "ps3.svg")
-        for i in self.ps3_2.submobjects: i.set_stroke(color=BLACK, width=.1)
-        self.ps4 = SVGMobject(ASSETS_PATH + "ps4.svg")
-        t1 = 1
-        self.current = 0
-        self.direction = DOWN
-
-        def updater(obj, dt):
-            self.current += dt
-
-            if self.current >= t1:
-                self.direction = UP
-                self.current = 0
-            alpha = easeInOutCubic(self.current) * .2
-            obj.shift(alpha * self.direction)
-
-        self.ps3_2.add_updater(updater)
-        self.add(self.ps3_2)
-        self.remove(self.ps3, *self.pss, self.xbox360)
-        self.wait(1.3)
-        self.play(
-            FadeTransformPieces(self.ps3_2, self.ps4)
-        )
-
 
 class Test(Scene):
 
@@ -971,7 +946,7 @@ class ControllerPS4ToXboxOne(Scene):
         self.wait(.1)
 
 
-class ControllerXboxOneSwitch(Scene):
+class ControllerXboxOneSwitch(MovingCameraScene):
 
     def construct(self):
         self.prepare()
@@ -1065,8 +1040,6 @@ class ControllerXboxOneSwitch(Scene):
             run_time=.6
         )
 
-        self.wait(.2)
-
     def switch_pro(self):
         self.left_con.z_index = 5
         self.right_con.z_index = 5
@@ -1082,13 +1055,16 @@ class ControllerXboxOneSwitch(Scene):
         self.play(
             self.left_con.animate.shift(2 * UP),
             self.right_con.animate.shift(2 * UP),
-            FadeTransformPieces(self.body, self.pro_con)
+            FadeTransformPieces(self.body, self.pro_con),
+            run_time=.6
         )
         right_translation = 1.293 * LEFT
         left_translation = 1.25 * RIGHT
         self.play(
             self.left_con.animate.shift(left_translation),
             self.right_con.animate.shift(right_translation),
+            rate_func=ease_in_circ,
+            run_time=.6
         )
 
         self.play(
@@ -1097,9 +1073,11 @@ class ControllerXboxOneSwitch(Scene):
                 self.right_con.animate.shift(2 * DOWN),
                 self.left_con.animate.shift(2 * DOWN),
                 lag_ratio=.3
-            )
+            ),
+            rate_func=smooth,
+            run_time=.6
         )
-        self.wait(.2)
+        self.wait(.1)
 
     def ps5_meme(self):
         self.pro_con.add(*self.left_con)
@@ -1107,3 +1085,13 @@ class ControllerXboxOneSwitch(Scene):
         self.play(
             FadeTransformPieces(self.pro_con, self.ps5)
         )
+        self.play(
+            FadeIn(self.stockless),
+            run_time=.5
+        )
+        target = 1.5 * UP + .5 * RIGHT
+        self.play(
+            self.camera.frame.animate.scale(.3).move_to(target),
+            run_time=.4
+        )
+        self.wait(.2)
