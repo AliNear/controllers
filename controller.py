@@ -976,20 +976,34 @@ class ControllerXboxOneSwitch(Scene):
     def construct(self):
         self.prepare()
         self.start_animations()
+        self.switch_pro()
+        self.ps5_meme()
 
     def prepare(self):
         self.xbox1 = SVGMobject(ASSETS_PATH + "xbox_one.svg")
         self.switch = SVGMobject(ASSETS_PATH + "switch.svg")
-        self.right_con = get_obj_by_id(self.switch, "right_con")
-        self.left_con = get_obj_by_id(self.switch, "left_con")
-        self.body = get_objs_by_ids(self.switch, [
-            "screen_border",
-            "bezels",
-            "screen"
-        ])
+        self.pro_con = SVGMobject(ASSETS_PATH + "switch_pro.svg").set_y(-1)
+        self.ps5 = SVGMobject(ASSETS_PATH + "ps5.svg")
+        self.stockless = ImageMobject(ASSETS_PATH + "stockless.png")
+
+        cons = ["right_con", "left_con"]
+        self.right_con = get_obj_by_id(self.switch, cons[0])
+        self.left_con = get_obj_by_id(self.switch, cons[1])
+        body = ["screen_border", "bezels", "screen"]
+        self.body = get_objs_by_ids(self.switch, body)
 
         left_x = self.left_con.get_edge_center(RIGHT)[0] * RIGHT
         right_x = self.right_con.get_edge_center(LEFT)[0] * RIGHT
+        triggers = ["left_trigger", "right_trigger"]
+        self.triggers = get_objs_by_ids(self.switch, triggers)
+        for i in self.triggers:
+            i.z_index = -1
+
+        temp, self.buttons = get_objs_by_ids_rest(
+            self.switch,
+            body+triggers+cons
+        )
+
 
         self.left_rect = Polygon(
             left_x + 4 * UP,
@@ -1033,9 +1047,63 @@ class ControllerXboxOneSwitch(Scene):
         self.remove(self.xbox1)
         self.wait(.1)
         self.play(
-            Transform(self.left_rect, self.left_con),
-            Transform(self.right_rect, self.right_con),
-            Transform(self.center_rect, self.body),
+            ReplacementTransform(self.left_rect, self.left_con),
+            ReplacementTransform(self.right_rect, self.right_con),
+            FadeTransform(self.center_rect, self.body),
+        )
+        self.play(
+            LaggedStart(*[
+                    GrowFromCenter(i)
+                    for i in self.buttons
+                ],
+                lag_ratio=.1
+            ),
+            run_time=2
+        )
+        self.play(
+            FadeInFrom(self.triggers, 3 * UP, rate_func=ease_in_circ),
+            run_time=.6
         )
 
         self.wait(.2)
+
+    def switch_pro(self):
+        self.left_con.z_index = 5
+        self.right_con.z_index = 5
+        self.left_con.add(self.triggers[0])
+        self.right_con.add(self.triggers[1])
+
+        for i in self.buttons:
+            i.z_index = 5
+            if i.get_x() < 0:
+                self.left_con.add(i)
+            else:
+                self.right_con.add(i)
+        self.play(
+            self.left_con.animate.shift(2 * UP),
+            self.right_con.animate.shift(2 * UP),
+            FadeTransformPieces(self.body, self.pro_con)
+        )
+        right_translation = 1.293 * LEFT
+        left_translation = 1.25 * RIGHT
+        self.play(
+            self.left_con.animate.shift(left_translation),
+            self.right_con.animate.shift(right_translation),
+        )
+
+        self.play(
+            self.pro_con.animate.shift(UP),
+            LaggedStart(
+                self.right_con.animate.shift(2 * DOWN),
+                self.left_con.animate.shift(2 * DOWN),
+                lag_ratio=.3
+            )
+        )
+        self.wait(.2)
+
+    def ps5_meme(self):
+        self.pro_con.add(*self.left_con)
+        self.pro_con.add(*self.right_con)
+        self.play(
+            FadeTransformPieces(self.pro_con, self.ps5)
+        )
