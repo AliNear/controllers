@@ -541,100 +541,6 @@ class ControllerEvolution(MovingCameraScene):
         self.wait(.3)
 
 
-class Test(Scene):
-
-    def construct(self):
-        #diff between buttons coors (ps4 & ps3)
-        self.x_bias = 0.11373310005032339
-        self.y_bias = 0.23616817231530646
-        self.ps3 = SVGMobject(ASSETS_PATH + "ps3.svg")
-        self.ps4 = SVGMobject(ASSETS_PATH + "ps4.svg")
-        for i in self.ps3.submobjects: i.set_stroke(color=BLACK, width=.1)
-
-        body_ps4 = get_obj_by_id(self.ps4, "body")
-        #body_ps4.z_index = -1
-        body_ps3 = get_objs_by_ids(
-            self.ps3,
-            [
-                "body_center", "body_center_inner", "dpad_holder",
-                "right_trigger_holder", "left_trigger_holder",
-                "right_handle", "left_handle", "buttons_holder",
-                "dpad_cross", "buttons_cross"
-            ]
-        )
-        #for i in body_ps3: i.z_index = -1
-
-        self.ps4.set_y(-self.y_bias)
-        self.ps4.set_x(-self.x_bias)
-
-        #self.play(FadeIn(self.ps4))
-        self.ps3.animate.match_width(self.ps4)
-        #self.ps3.scale(4)
-        #self.ps4.scale(4)
-        self.play(FadeIn(self.ps3))
-        animations = []
-        transforms = []
-        for i in ("cross", "triangle", "square", "circle"):
-            #button: the cirle
-            #shape: cross, triangle, etc...
-            button_ps3 = get_obj_by_id(self.ps3, f"{i}_button")
-            button_ps4 = get_obj_by_id(self.ps4, f"{i}_button")
-            shape_ps3 = get_obj_by_id(self.ps3, i)
-            shape_ps4 = get_obj_by_id(self.ps4, i)
-            shape_ps3.z_index = 3
-            shape_ps4.z_index = 3
-            button_ps4.z_index = 2
-            button_ps3.z_index = 2
-
-            animations.append(button_ps3.animate.match_style(button_ps4))
-            animations.append(button_ps3.animate.move_to(button_ps4))
-            transforms.append(Transform(shape_ps3, shape_ps4))
-
-        buttons_cross = get_obj_by_id(self.ps3, "buttons_cross")
-        dpad_cross = get_obj_by_id(self.ps3, "dpad_cross")
-        dpad = get_obj_by_id(self.ps4, "arrows")
-        dpad_ps3 = get_objs_by_ids(self.ps3, ["up", "down", "left", "right"])
-        print(dpad.get_x()-dpad_cross.get_x())
-        holders_ps3 = get_objs_by_ids(self.ps3, ["buttons_holder", "dpad_holder"])
-        holders_ps4 = get_objs_by_ids(self.ps4, ["left_circle", "right_circle"])
-        self.play(
-            ShrinkToCenter(buttons_cross),
-            ShrinkToCenter(dpad_cross),
-        )
-        self.play(*[
-            i.animate.match_style(j)
-            for i,j in zip(holders_ps3, holders_ps4)
-        ])
-        self.play(
-            LaggedStart(*animations),
-            LaggedStart(*transforms),
-            rate_fun=rush_into
-        )
-        self.play(FadeTransformPieces(dpad_ps3, dpad))
-
-
-
-
-    def show_diff(self):
-        x_sum = 0
-        y_sum = 0
-        for i in ("cross", "triangle", "square", "circle"):
-            cross_ps3 = get_obj_by_id(self.ps3, f"{i}_button")
-            cross_ps4 = get_obj_by_id(self.ps4, f"{i}_button")
-
-            x_diff = cross_ps4.get_x()-cross_ps3.get_x()
-            y_diff = cross_ps4.get_y()-cross_ps3.get_y()
-            x_sum += x_diff
-            y_sum += y_diff
-            #print("Y Diff", y_diff)
-            #print("X Diff", x_diff)
-
-        print("Average x diff", x_sum/4)
-        print("Average y diff", y_sum/4)
-
-        self.wait(.3)
-
-
 class ControllerPS3ToPS4(Scene):
     # TODO:
     # Add Triggers
@@ -734,6 +640,11 @@ class ControllerPS3ToPS4(Scene):
         lights = [f"light_{i}" for i in range(1, 5)]
         lights_ps3 = get_objs_by_ids(self.ps3, lights)
         trackpad = get_obj_by_id(self.ps4, "trackpad")
+        
+        triggers = ["left_trigger", "right_trigger"]
+        self.triggers = get_objs_by_ids(self.ps4, triggers)
+        for i in self.triggers:
+            i.z_index = -2
         trackpad.z_index = 4
         mic = get_obj_by_id(self.ps4, "mic")
         mic.z_index = 4
@@ -825,6 +736,11 @@ class ControllerPS3ToPS4(Scene):
                 FadeInFrom(right_extreme, rl_coeff * RIGHT + d_coeff * DOWN),
                 FadeInFrom(left_extreme, rl_coeff * LEFT + d_coeff * DOWN),
             )
+        )
+        self.play(
+            FadeInFrom(self.triggers, 2 * UP),
+            rate_func=ease_in_expo,
+            run_tim=.5
         )
         self.play(
             LaggedStart(*[
