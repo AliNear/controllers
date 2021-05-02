@@ -969,3 +969,73 @@ class ControllerPS4ToXboxOne(Scene):
             )
         )
         self.wait(.1)
+
+
+class ControllerXboxOneSwitch(Scene):
+
+    def construct(self):
+        self.prepare()
+        self.start_animations()
+
+    def prepare(self):
+        self.xbox1 = SVGMobject(ASSETS_PATH + "xbox_one.svg")
+        self.switch = SVGMobject(ASSETS_PATH + "switch.svg")
+        self.right_con = get_obj_by_id(self.switch, "right_con")
+        self.left_con = get_obj_by_id(self.switch, "left_con")
+        self.body = get_objs_by_ids(self.switch, [
+            "screen_border",
+            "bezels",
+            "screen"
+        ])
+
+        left_x = self.left_con.get_edge_center(RIGHT)[0] * RIGHT
+        right_x = self.right_con.get_edge_center(LEFT)[0] * RIGHT
+
+        self.left_rect = Polygon(
+            left_x + 4 * UP,
+            left_x + 4 * DOWN,
+            (left_x + 4 * DOWN) + 6 * LEFT,
+            (left_x + 4 * UP) + 6 * LEFT,
+            fill_color="#01bbe2",
+            fill_opacity=1,
+            stroke_width=0
+        )
+
+        self.right_rect = Polygon(
+            right_x + 4 * UP,
+            right_x + 4 * DOWN,
+            (right_x + 4 * DOWN) - 6 * LEFT,
+            (right_x + 4 * UP) - 6 * LEFT,
+            fill_color="#fe5d53",
+            fill_opacity=1,
+            stroke_width=0
+        )
+
+        self.center_rect = Polygon(
+            right_x + 4 * UP,
+            right_x + 4 * DOWN,
+            left_x + 4 * DOWN,
+            left_x + 4 * UP,
+            fill_color="#606062",
+            fill_opacity=1,
+            stroke_width=0
+        )
+
+
+
+    def start_animations(self):
+        self.add(self.xbox1)
+        self.play(
+            FadeInFrom(self.left_rect, 7 * UP),
+            FadeInFrom(self.right_rect, 7 * DOWN),
+            FadeIn(self.center_rect)
+        )
+        self.remove(self.xbox1)
+        self.wait(.1)
+        self.play(
+            Transform(self.left_rect, self.left_con),
+            Transform(self.right_rect, self.right_con),
+            Transform(self.center_rect, self.body),
+        )
+
+        self.wait(.2)
