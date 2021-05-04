@@ -617,7 +617,7 @@ class ControllerPS3ToPS4(Scene):
 
     def construct(self):
         # Background
-        self.bg = ImageMobject(ASSETS_PATH + "bg.jpg").scale(2)
+        self.bg = ImageMobject(ASSETS_PATH + "bg.jpg")
         self.bg.z_index = -20
         self.add(self.bg)
 
@@ -847,7 +847,7 @@ class ControllerPS4ToXboxOne(Scene):
 
     def prepare(self):
         # Background
-        self.bg = ImageMobject(ASSETS_PATH + "bg.jpg").scale(2)
+        self.bg = ImageMobject(ASSETS_PATH + "bg.jpg")
         self.bg.z_index = -20
         self.add(self.bg)
 
@@ -962,7 +962,7 @@ class ControllerXboxOneSwitch(MovingCameraScene):
         self.ps5_meme()
 
     def prepare(self):
-        self.bg = ImageMobject(ASSETS_PATH + "bg.jpg").scale(2)
+        self.bg = ImageMobject(ASSETS_PATH + "bg.jpg")
         self.bg.z_index = -20
         self.add(self.bg)
         self.title_xbox1 = get_title("Xbox One")
