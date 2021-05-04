@@ -3,6 +3,9 @@
 # Not a good design decision
 # From ps4, every transition on it's own scene.
 
+# TODO
+# Complete titles + font & color text
+# Time ps3 to ps4
 
 from typing_extensions import runtime
 from manim import *
@@ -65,10 +68,32 @@ def get_objs_by_ids(obj, ids):
 
     return objs
 
+def get_title(title: str) -> TextMobject:
+    text_font = "SF Pro Display"
+    text_color = WHITE
+    text_coords = np.array([0, -3, 0])
+
+    text = Text(
+        title,
+        font=text_font,
+        color=text_color,
+        weight=BOLD,
+    )
+    text.move_to(text_coords)
+    return text
 
 class ControllerEvolution(MovingCameraScene):
 
     def construct(self):
+        self.text_font = "SF Pro Display"
+        self.text_color = WHITE
+        self.text_coords = np.array([0, -3, 0])
+
+        # Background
+        self.bg = ImageMobject(ASSETS_PATH + "bg.jpg")
+        self.bg.z_index = -20
+        self.add(self.bg)
+
         self.nes_snes()
         self.snes_ps1()
         self.ps1_n64()
@@ -78,6 +103,18 @@ class ControllerEvolution(MovingCameraScene):
         self.gamecube_wii()
         self.wii_xbox360()
         self.xbox360_ps3()
+
+    # Helper function
+    def get_title(self, title: str) -> TextMobject:
+        text =  Text(
+            title,
+            font=self.text_font,
+            color=self.text_color,
+            weight=BOLD,
+        )
+        text.move_to(self.text_coords)
+        return text
+        
 
     def nes_snes(self):
         self.nes = SVGMobject(ASSETS_PATH + "nes.svg")
@@ -98,9 +135,15 @@ class ControllerEvolution(MovingCameraScene):
         temp, body_snes = get_objs_by_ids_rest(self.snes, [
             "dpad", "green", "red", "start_select"
         ])
-        print(body_snes)
+
+        self.title_nes = self.get_title("NES")
+        self.title_snes = self.get_title("SNES")
+        
         self.play(
-            DrawBorderThenFill(self.nes)
+            LaggedStart(
+                DrawBorderThenFill(self.nes),
+                AddTextLetterByLetter(self.title_nes),
+            )
         )
         for i in body_nes:
             i.z_index =- 1
@@ -131,6 +174,10 @@ class ControllerEvolution(MovingCameraScene):
                     ss,
                     start_s
                 ),
+                FadeTransformPieces(
+                    self.title_nes,
+                    self.title_snes
+                )
            ),
             rate_func=slow_into,
 
@@ -139,6 +186,7 @@ class ControllerEvolution(MovingCameraScene):
 
     def snes_ps1(self):
         self.ps1 = SVGMobject(ASSETS_PATH + "ps1")
+        self.title_ps1 = self.get_title("PlayStation 1")
         snes_dpad = ["dpad_circle", "dpad"]
         snes_buttons = ["red", "green", "blue","yellow"]
         self.ps1_dpad = ["up", "right", "down", "left"]
@@ -178,11 +226,13 @@ class ControllerEvolution(MovingCameraScene):
                 ],
                 rate_func=rush_into,
             ),
+            FadeTransformPieces(self.title_snes, self.title_ps1),
             GrowFromCenter(self.ps1_body, rate_func=slow_into, run_time=.5),
         )
 
     def ps1_n64(self):
         self.n64 = SVGMobject(ASSETS_PATH + "n64.svg")
+        self.title_n64 = self.get_title("Nintendo 64")
         for i in self.n64:i.set_stroke(width=.5)
         self.n64_buttons = [f"yellow_{i}" for i in range(1, 5)]
         self.rgb = ["red", "green", "blue"]
@@ -212,6 +262,7 @@ class ControllerEvolution(MovingCameraScene):
             ReplacementTransform(self.ps1_dpad_obj, self.n64_dpad),
             ReplacementTransform(self.ps1_triggers_obj, self.n64_triggers),
             FadeOut(self.ps1_ss_obj),
+            FadeTransformPieces(self.title_ps1, self.title_n64),
             rate_func = rush_into,
         )
         self.play(
@@ -225,6 +276,7 @@ class ControllerEvolution(MovingCameraScene):
 
     def n64_ps2(self):
         self.ps2 = SVGMobject(ASSETS_PATH + "ps2").scale(.8)
+        self.title_ps2 = self.get_title("PlayStation 2")
         for i in self.ps2:i.set_stroke(width=.1)
         handles = ["left_handle", "right_handle"]
         ps2_handles = get_objs_by_ids(self.ps2, handles)
@@ -263,9 +315,15 @@ class ControllerEvolution(MovingCameraScene):
 
 
         self.play(
-            ReplacementTransform(n64_handles, ps2_handles)
+            FadeTransformPieces(n64_handles, ps2_handles),
+            FadeTransformPieces(self.title_n64, self.title_ps2),
+            rate_func=ease_in_expo,
+            run_time=.7
         )
-        self.play(ReplacementTransform(self.n64_body, self.ps2_body))
+        self.play(
+            FadeTransformPieces(self.n64_body, self.ps2_body),
+            rate_func=ease_in_circ
+            )
         self.play(
             LaggedStart(*[
                 ReplacementTransform(i, j)
@@ -299,6 +357,7 @@ class ControllerEvolution(MovingCameraScene):
 
     def ps2_xbox(self):
         self.xbox = SVGMobject(ASSETS_PATH + "xbox_fat.svg")
+        self.title_xbox = self.get_title("Xbox")
         for i in self.xbox: i.set_stroke(BLACK, width=.1)
         self.xbox_button = [
             "green", "yellow", "blue", "red"
@@ -330,6 +389,7 @@ class ControllerEvolution(MovingCameraScene):
             ApplyMethod(self.ps2_buttons_obj.shift, 2 * UP, rate_func=rush_from),
             LaggedStart(
                 ReplacementTransform(self.ps2_body, self.xbox_body),
+                FadeTransformPieces(self.title_ps2, self.title_xbox),
                 LaggedStart(*[
                     ReplacementTransform(i, j)
                     for i,j in [
@@ -350,8 +410,9 @@ class ControllerEvolution(MovingCameraScene):
         self.wait(.2)
 
     def xbox_gamecube(self):
-        self.handles = ["left_handle", "right_handle"]
         self.gamecube = SVGMobject(ASSETS_PATH + "gamecube.svg")
+        self.title_gc = self.get_title("GameCube")
+        self.handles = ["left_handle", "right_handle"]
         x_body, x_rest = get_objs_by_ids_rest(self.xbox, ["body", "upper_body"])
         g_body, g_rest = get_objs_by_ids_rest(self.gamecube,
                                           ["body"]+self.handles)
@@ -363,14 +424,17 @@ class ControllerEvolution(MovingCameraScene):
                 ApplyMethod(i.shift, 5 * DOWN)
                 for i in x_rest
             ], lag_ratio=.2),
-            run_time=3
+            run_time=2.5
         )
         self.play(
-            ApplyMethod(x_body.set_color, "#565E9E")
+            ApplyMethod(x_body.set_color, "#565E9E"),
+            run_time=.8,
+            rate_func=ease_in_circ
         )
         self.play(
             LaggedStart(
                 FadeTransformPieces(x_body, g_body),
+                FadeTransformPieces(self.title_xbox, self.title_gc),
                 FadeInFrom(self.g_triggers, 5 * UP),
                 lag_ratio=.2
             )
@@ -387,6 +451,7 @@ class ControllerEvolution(MovingCameraScene):
 
     def gamecube_wii(self):
         self.wii = SVGMobject(ASSETS_PATH + "wii.svg")
+        self.title_wii = self.get_title("Wii")
         g_handles = get_objs_by_ids(self.gamecube, self.handles)
         right_buttons = get_objs_by_ids(self.gamecube,
                                    [f"{i}_button" for i in "abxy"]+list("abxy")+
@@ -424,6 +489,7 @@ class ControllerEvolution(MovingCameraScene):
         self.play(
             LaggedStart(
                 FadeTransformPieces(body, wii_body),
+                FadeTransformPieces(self.title_gc, self.title_wii),
                 LaggedStart(*[
                     GrowFromCenter(i)
                     for i in buttons
@@ -435,14 +501,17 @@ class ControllerEvolution(MovingCameraScene):
 
     def wii_xbox360(self):
         self.xbox360 = SVGMobject(ASSETS_PATH + "xbox360.svg")
+        self.title_xb360 = self.get_title("Xbox 360")
         for i in self.xbox360.submobjects: i.set_stroke(color=BLACK, width=.1)
         self.play(
-            FadeTransformPieces(self.wii, self.xbox360)
+            FadeTransformPieces(self.wii, self.xbox360),
+            FadeTransformPieces(self.title_wii, self.title_xb360),
         )
         self.wait(.3)
 
     def xbox360_ps3(self):
         self.ps3 = SVGMobject(ASSETS_PATH + "ps3.svg")
+        self.title_ps3 = self.get_title("PlayStation 3")
         for i in self.xbox360.submobjects: i.set_stroke(color=BLACK, width=.1)
         for i in self.ps3.submobjects: i.set_stroke(color=BLACK, width=.1)
 
@@ -527,7 +596,8 @@ class ControllerEvolution(MovingCameraScene):
         )
         for i in xbox_objs: i.clear_updaters()
         self.play(
-            FadeTransformPieces(xbox_body, ps3_body)
+            FadeTransformPieces(xbox_body, ps3_body),
+            FadeTransformPieces(self.title_xb360, self.title_ps3)
         )
         self.play(
             LaggedStart(*[
@@ -546,15 +616,23 @@ class ControllerPS3ToPS4(Scene):
     # Add Triggers
 
     def construct(self):
+        # Background
+        self.bg = ImageMobject(ASSETS_PATH + "bg.jpg").scale(2)
+        self.bg.z_index = -20
+        self.add(self.bg)
+
         self.ps3 = SVGMobject(ASSETS_PATH + "ps3.svg")
         for i in self.ps3.submobjects:
             i.set_stroke(width=.5)
+        self.title_ps3 = get_title("PlayStation 3")
+        self.title_ps4 = get_title("PlayStation 4")
         self.ps4 = SVGMobject(ASSETS_PATH + "ps4_2.svg")
         self.add(self.ps3)
+        self.add(self.title_ps3)
         l = Line(
             UP,
             DOWN,
-            color=BLACK,
+            color=WHITE,
             stroke_width=.8,
         )
         l.z_index = -9
@@ -718,7 +796,8 @@ class ControllerPS3ToPS4(Scene):
             LaggedStart(
                 transforms_body,
                 transforms_buttons,
-                lag_ratio=.5
+                FadeTransformPieces(self.title_ps3, self.title_ps4),
+                lag_ratio=.3
             )
         )
         for i in lines:
@@ -735,12 +814,14 @@ class ControllerPS3ToPS4(Scene):
                 GrowFromCenter(mic),
                 FadeInFrom(right_extreme, rl_coeff * RIGHT + d_coeff * DOWN),
                 FadeInFrom(left_extreme, rl_coeff * LEFT + d_coeff * DOWN),
-            )
+            ),
+
+            run_time=.4
         )
         self.play(
             FadeInFrom(self.triggers, 2 * UP),
             rate_func=ease_in_expo,
-            run_tim=.5
+            run_time=.3
         )
         self.play(
             LaggedStart(*[
@@ -750,8 +831,9 @@ class ControllerPS3ToPS4(Scene):
             lag_ratio=.3
             ),
             trackpad.animate.shift(5*DOWN),
-            rate_func=linear
+            rate_func=linear,
         )
+        self.wait(.1)
 
 
 class ControllerPS4ToXboxOne(Scene):
@@ -764,8 +846,16 @@ class ControllerPS4ToXboxOne(Scene):
         self.start_animation()
 
     def prepare(self):
+        # Background
+        self.bg = ImageMobject(ASSETS_PATH + "bg.jpg").scale(2)
+        self.bg.z_index = -20
+        self.add(self.bg)
+
         self.ps4 = SVGMobject(ASSETS_PATH + "ps4_2.svg")
         self.xbox1 = SVGMobject(ASSETS_PATH + "xbox_one.svg")
+        self.title_ps4 = get_title("PlayStation 4")
+        self.title_xbox1 = get_title("Xbox One")
+
         self.ps4_body, self.ps4_rest = get_objs_by_ids_rest(
             self.ps4,[
                 "body_center",
@@ -804,7 +894,7 @@ class ControllerPS4ToXboxOne(Scene):
         self.xbox1_right_analog = get_objs_by_ids(self.xbox1, right_analogs)
 
     def start_animation(self):
-        self.add(self.ps4)
+        self.add(self.ps4, self.title_ps4)
         self.play(
             self.ps4.animate.set_color(self.ps4_color),
             run_time=.5
@@ -813,6 +903,7 @@ class ControllerPS4ToXboxOne(Scene):
         self.wait(.1)
         self.play(
             ClockwiseTransform(self.ps4_body, self.xbox1_body),
+            FadeTransformPieces(self.title_ps4, self.title_xbox1),
             rate_func=ease_in_circ,
             run_time=.7
         )
@@ -871,6 +962,12 @@ class ControllerXboxOneSwitch(MovingCameraScene):
         self.ps5_meme()
 
     def prepare(self):
+        self.bg = ImageMobject(ASSETS_PATH + "bg.jpg").scale(2)
+        self.bg.z_index = -20
+        self.add(self.bg)
+        self.title_xbox1 = get_title("Xbox One")
+        self.title_switch = get_title("Switch")
+
         self.xbox1 = SVGMobject(ASSETS_PATH + "xbox_one.svg")
         self.switch = SVGMobject(ASSETS_PATH + "switch.svg")
         self.pro_con = SVGMobject(ASSETS_PATH + "switch_pro.svg").set_y(-1)
@@ -929,18 +1026,19 @@ class ControllerXboxOneSwitch(MovingCameraScene):
 
 
     def start_animations(self):
-        self.add(self.xbox1)
+        self.add(self.xbox1, self.title_xbox1)
         self.play(
             FadeInFrom(self.left_rect, 7 * UP),
             FadeInFrom(self.right_rect, 7 * DOWN),
             FadeIn(self.center_rect)
         )
-        self.remove(self.xbox1)
+        self.remove(self.xbox1, self.title_xbox1)
         self.wait(.1)
         self.play(
             ReplacementTransform(self.left_rect, self.left_con),
             ReplacementTransform(self.right_rect, self.right_con),
             FadeTransform(self.center_rect, self.body),
+            FadeInFrom(self.title_switch, DOWN)
         )
         self.play(
             LaggedStart(*[
@@ -998,8 +1096,10 @@ class ControllerXboxOneSwitch(MovingCameraScene):
     def ps5_meme(self):
         self.pro_con.add(*self.left_con)
         self.pro_con.add(*self.right_con)
+        self.title_ps5 = get_title("PlayStation 5")
         self.play(
-            FadeTransformPieces(self.pro_con, self.ps5)
+            FadeTransformPieces(self.pro_con, self.ps5),
+            FadeTransformPieces(self.title_switch, self.title_ps5),
         )
         self.play(
             FadeIn(self.stockless),
